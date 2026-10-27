@@ -39,10 +39,13 @@ The Autonomous Drone Mission Planner helps a drone operator select a compatible 
 
 **Constraints and interpretation**
 
-- A mission has exactly one responsible operator and one aircraft. An aircraft cannot have two active missions in the planner. All commands and observations must match the intended aircraft and mission context.
-- A revision needs at least one waypoint with unique ordering, valid coordinates, positive speed, and values within the selected aircraft's supported limits. Invalid input is rejected with a field-specific reason; the last valid saved revision is retained.
+- Mission needs are required payload mass, route distance, and flight duration, with explicit units and finite positive values. A selectable candidate must have documented compatibility and limits that meet all three needs. If none qualify, show why and leave the selection empty.
+- A mission has exactly one responsible operator and one aircraft. Checking and reserving an aircraft for Uploading must be atomic: simultaneous starts cannot reserve it twice. The reservation remains until a confirmed rejection, confirmed non-execution, or confirmed landing. All commands and observations must match the intended aircraft and mission context.
+- A revision needs at least one waypoint with unique ordering, finite coordinates, positive speed, a start time earlier than its end time, and values within the selected aircraft's supported limits. Times include a UTC offset and are compared as instants. Non-numeric values, NaN, and infinity are invalid. Invalid input is rejected with a field-specific reason; the last valid saved revision is retained.
 - Validation must establish coverage for the whole route and operation period. Missing or stale coverage, unknown required limits, or unsuitable required authorization evidence blocks Ready. External data freshness rules and the reserve policy must be configured explicitly; absence of a policy blocks validation.
-- Plan status is Draft → Validating → Ready → Uploading → Active → Completed. Failed validation returns Draft. A prelaunch edit invalidates Ready and preflight confirmation. Ready may expire when evidence expires. Active requires aircraft confirmation; Completed requires landing confirmation. An uncertain start is shown as unconfirmed and blocks another start until aircraft state is reconciled.
+- Plan status is Draft → Validating → Ready → Uploading → Active → Completed. Failed validation or expired evidence returns Draft. A prelaunch edit invalidates Ready and preflight confirmation. Active requires aircraft confirmation; confirmed landing immediately sets Completed, regardless of the displayed screen. A confirmed start rejection returns Ready if validation remains current, otherwise Draft. An uncertain start retains Uploading with an unconfirmed warning and blocks another start. Reconciliation requires fresh aircraft status establishing execution of that revision or non-execution; an operator dismissing the warning is insufficient.
+- Recheck the approved inputs before upload and again before the start command. If evidence expires or changes during upload, send no start command and require revalidation and renewed preflight. If start was already sent, track its outcome without assuming the aircraft stopped.
+- After confirmed non-execution resolves an uncertain start, release the aircraft reservation, return to Ready only if validation is current (otherwise Draft), and require renewed preflight before another start.
 - Route editing is disabled during Uploading and Active. Manual control changes the aircraft mode, not the saved plan revision. Missing telemetry does not mean the aircraft landed.
 - Telemetry stale interval, lost-link interval, command acknowledgement timeout, and deviation thresholds must be configured for the supported aircraft before operation. The stale interval is shorter than the lost-link interval. These are explicit MVP configuration requirements, not measured performance claims. Tests use a controllable clock and synthetic aircraft data.
 
@@ -50,15 +53,15 @@ The Autonomous Drone Mission Planner helps a drone operator select a compatible 
 
 | ID | User story | Goals | Project 1 source |
 | --- | --- | --- | --- |
-| **FR-001** | As an operator, I want to enter mission needs with units, compare configuration and supplier records with source dates, and select a configuration, so that I can choose suitable equipment. | G-001 | US01 |
+| **FR-001** | As an operator, I want to enter payload, distance, and duration needs with units, compare configuration and supplier records with source dates, and select only a configuration that meets those needs, so that I can choose suitable equipment. | G-001 | US01 |
 | **FR-002** | As an operator, I want confirmed incompatible combinations excluded and missing compatibility evidence identified and blocked from selection, so that unknown compatibility is not treated as approval. | G-001 | FR02; clarified selection policy |
 | **FR-003** | As an operator, I want to enter and save ordered waypoints, supported tasks, altitude, speed, and an operation period, so that I can prepare a mission using the selected aircraft. | G-002 | US02 |
 | **FR-004** | As an operator, I want to record externally issued decisions and validate a saved route against range with reserve, airspace coverage, and required authorization scope/time, so that I can see every blocking reason before launch. | G-002 | FR04 |
-| **FR-005** | As an operator, I want validation and preflight tied to the saved revision and invalidated by edits or expired evidence, so that I cannot start using obsolete findings. | G-002 | FR07 |
+| **FR-005** | As an operator, I want validation and preflight tied to the saved revision and its configuration, policies, and evidence versions, and invalidated when those inputs change or expire, so that I cannot start using obsolete findings. | G-002 | FR07 |
 | **FR-006** | As an operator, I want Start to recheck current validation and preflight, upload the plan, and show Active only after aircraft start confirmation, so that a pending or failed request is not mistaken for flight. Duplicate starts and conflicting aircraft assignments must be blocked. | G-002, G-003 | FR08 |
 | **FR-007** | As an operator, I want timestamped position, battery, reported mode, and mission progress with deviation, stale-data, and lost-link alerts, so that I can supervise flight with visible uncertainty. | G-003 | US03, FR09 |
 | **FR-008** | As an operator, I want to request manual mode and send supported direct controls only after fresh aircraft confirmation of manual mode, so that I can retain pilot control without mistaking my request for a completed handoff. | G-003 | US04, FR10 |
-| **FR-009** | As an operator, I want each command tied to the correct aircraft and mission with a visible requested/accepted/rejected/unknown outcome, so that I can judge whether further action is needed. Uncertain flight commands must not be retried automatically. | G-003 | FR10 |
+| **FR-009** | As an operator, I want each command tied to the correct aircraft and mission with a visible requested/accepted/rejected/unknown outcome, so that I can judge whether further action is needed. Uncertain flight commands must not be retried automatically. Duplicate acknowledgements must not repeat actions, and late matched acknowledgements must update the same command's history. | G-003 | FR10 |
 | **FR-010** | As an operator, I want supported safe-action requests and a return to the editor only after landing confirmation, so that supervision remains visible until the flight has ended. | G-003 | S3 mini-spec/navigation |
 | **FR-011** | As an operator, I want saved revisions, evidence references, confirmations, alerts, and command outcomes retained with timestamps and operator identity, so that mission decisions can be reviewed. | G-004 | FR11 |
 
@@ -93,6 +96,21 @@ Feature: Select a supported aircraft configuration
     When P1 requests recommendations without a required mission need
     Then the missing field is identified
     And no new configuration selection is saved
+
+  Scenario Outline: No candidate meets the mission needs
+    Given all candidates have <problem>
+    When P1 requests recommendations
+    Then no candidate can be selected
+    And the reason is displayed
+    Examples:
+      | problem                         |
+      | insufficient payload capacity   |
+      | insufficient range with reserve |
+      | insufficient flight duration    |
+
+  Scenario: Mission needs contain invalid numbers
+    When P1 enters a negative, non-numeric, or non-finite mission need
+    Then the field is rejected and no new selection is saved
 ```
 
 ## AC-002 — Save and validate route input (FR-003)
@@ -120,6 +138,9 @@ Feature: Save an ordered mission revision
       | altitude above the configured limit |
       | an unsupported flight task         |
       | end time before start time         |
+      | end time equal to start time       |
+      | time without a UTC offset          |
+      | NaN or infinity in a numeric field |
 
   Scenario Outline: Protect the executing revision
     Given M1 has status <status>
@@ -168,6 +189,12 @@ Feature: Validate a saved mission
     Given R1 exceeds range and lacks required authorization
     When P1 validates R1
     Then both blocking findings are displayed
+
+  Scenario: Authorization is not required
+    Given current airspace data establishes that R1 needs no authorization
+    And all range, reserve, and coverage checks pass
+    When P1 validates R1 without an authorization decision
+    Then the authorization finding is Not required and M1 is Ready
 ```
 
 ## AC-004 — Invalidate obsolete approval (FR-005)
@@ -185,6 +212,8 @@ Feature: Bind readiness to current inputs
       | a different configuration is selected |
       | the operation period is changed     |
       | required evidence expires           |
+      | the reserve policy changes          |
+      | referenced compatibility or airspace evidence changes |
 
   Scenario: A stale validation result arrives
     Given validation began for R1
@@ -224,6 +253,18 @@ Feature: Start the current approved mission
     When P1 selects Start again
     Then no second upload or start command is sent
 
+  Scenario: Two missions start on the same aircraft simultaneously
+    Given M1 and M2 are both Ready for A1 with confirmed preflight
+    When both Start requests arrive together
+    Then only one mission reserves A1 and sends an upload
+    And the other request is blocked with a conflict reason
+
+  Scenario: Evidence expires during upload
+    Given R1 is Uploading and no start command has been sent
+    When required evidence expires before upload acknowledgement
+    Then no start command is sent
+    And R1 requires revalidation and renewed preflight
+
   Scenario Outline: Start is not confirmed
     Given R1 has been sent to A1
     When <response> occurs
@@ -236,6 +277,20 @@ Feature: Start the current approved mission
       | A1 rejects start                 |
       | acknowledgement timeout expires |
       | upload is accepted but execution confirmation times out |
+
+  Scenario Outline: Reconcile an uncertain start
+    Given M1 has an unconfirmed start and reserves A1
+    When fresh A1 status confirms <status>
+    Then the planner applies <result>
+    Examples:
+      | status                         | result                                      |
+      | execution of M1's revision      | mark M1 Active and show its live dashboard   |
+      | non-execution of that revision  | release the reservation and require renewed preflight before another start |
+
+  Scenario: Dismiss an uncertainty warning
+    Given M1 has an unconfirmed start
+    When P1 dismisses its warning
+    Then another start remains blocked until aircraft state is reconciled
 ```
 
 ## AC-006 — Supervise current and stale observations (FR-007)
@@ -286,7 +341,7 @@ Feature: Request and confirm manual control
     Given P1 requested manual mode
     When <response> occurs
     Then direct-control input remains disabled
-    And the rejected or unknown outcome is visible
+    And the command outcome and unconfirmed mode are displayed separately
     Examples:
       | response                                     |
       | A1 rejects the mode request                   |
@@ -325,6 +380,13 @@ Feature: Track control request outcomes
     When an acknowledgement for another aircraft or an unrelated command arrives
     Then K1's outcome is unchanged
     And the unmatched message does not establish a mode change
+
+  Scenario: A matched acknowledgement arrives late or twice
+    Given K1 timed out and its outcome is unknown
+    When A1's matching acceptance acknowledgement arrives twice
+    Then K1's outcome is accepted and its timeout remains in the history
+    And no duplicate command or flight action is triggered
+    And acceptance alone does not establish execution or manual mode
 ```
 
 ## AC-009 — Request a safe action and end supervision (FR-010)
@@ -338,9 +400,10 @@ Feature: Keep supervision until confirmed landing
     And M1 is not marked Completed merely because the request was sent or accepted
 
   Scenario: Landing is confirmed
-    Given fresh A1 status confirms landing
+    Given M1 is Active and fresh A1 status confirms landing
+    Then M1 is Completed and A1's mission reservation is released
     When P1 chooses to return to the editor
-    Then M1 is Completed and the editor opens
+    Then the editor opens with M1's completed record
 
   Scenario: Landing is not confirmed
     Given M1 is Active and landing has not been confirmed
