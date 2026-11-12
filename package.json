@@ -1,0 +1,9 @@
+{
+  "name": "drone-mission-planner-sdd",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/server.ts",
+    "test": "node --experimental-strip-types tests/contracts.test.ts"
+  }
+}

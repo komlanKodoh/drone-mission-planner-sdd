@@ -1,0 +1,21 @@
+Repository: https://github.com/komlanKodoh/drone-mission-planner-sdd
+
+Start the application with `npm start` (Node.js 22.6+; binds to 127.0.0.1:3000). Run the tests with `npm test`.
+
+Test output from `npm test`:
+
+# tests 22
+# suites 2
+# pass 12
+# fail 10
+# cancelled 0
+# skipped 0
+# todo 0
+
+All 12 route checks passed. The ten AC-001–AC-010 behavior tests each reached the corresponding contract and failed with `NotImplementedError`; they are expected to fail because this assignment calls for a no-business-logic skeleton. There were no syntax, import, or test-harness failures.
+
+Compared with Project 1, I added the module contracts and requirement-to-route mapping, a runnable TypeScript/Node server skeleton that returns HTTP 501 for the eleven functional requirement routes, a test plan refining AC-001–AC-010, and one behavior contract test for each acceptance criterion. The specification and architecture remain the source of behavior; no implementation logic was added.
+
+I used AI to draft and cross-check the public interfaces, route mapping, concrete test inputs and expected outcomes, controls, boundary cases, and spec-gap list against `spec.md` and `architecture.md`. AI also reviewed that each functional requirement maps to a public function and route. I did not use AI to generate business logic or to claim passing implementation tests.
+
+Generated with the help of GPT-6 (Codex).
