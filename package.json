@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node --experimental-strip-types src/server.ts",
-    "test": "node --experimental-strip-types tests/contracts.test.ts"
+    "start": "node --experimental-strip-types scripts/demo-server.ts",
+    "test": "node --experimental-strip-types tests/contracts.test.ts",
+    "test:implementation": "node --experimental-strip-types --test tests/implementation.test.ts tests/revisions.test.ts tests/validation.test.ts tests/preflight.test.ts tests/start.test.ts tests/aircraft.test.ts tests/interface.test.ts tests/records.test.ts"
   }
 }

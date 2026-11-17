@@ -1,0 +1,62 @@
+
+> test:implementation
+> node --experimental-strip-types --test tests/implementation.test.ts tests/revisions.test.ts tests/validation.test.ts tests/preflight.test.ts tests/start.test.ts tests/aircraft.test.ts tests/interface.test.ts tests/records.test.ts
+
+TAP version 13
+# Subtest: tests/aircraft.test.ts
+ok 1 - tests/aircraft.test.ts
+  ---
+  duration_ms: 732.904519
+  type: 'test'
+  ...
+# Subtest: tests/implementation.test.ts
+ok 2 - tests/implementation.test.ts
+  ---
+  duration_ms: 927.448655
+  type: 'test'
+  ...
+# Subtest: tests/interface.test.ts
+ok 3 - tests/interface.test.ts
+  ---
+  duration_ms: 648.433112
+  type: 'test'
+  ...
+# Subtest: tests/preflight.test.ts
+ok 4 - tests/preflight.test.ts
+  ---
+  duration_ms: 720.91484
+  type: 'test'
+  ...
+# Subtest: tests/records.test.ts
+ok 5 - tests/records.test.ts
+  ---
+  duration_ms: 714.173716
+  type: 'test'
+  ...
+# Subtest: tests/revisions.test.ts
+ok 6 - tests/revisions.test.ts
+  ---
+  duration_ms: 915.737417
+  type: 'test'
+  ...
+# Subtest: tests/start.test.ts
+ok 7 - tests/start.test.ts
+  ---
+  duration_ms: 860.018146
+  type: 'test'
+  ...
+# Subtest: tests/validation.test.ts
+ok 8 - tests/validation.test.ts
+  ---
+  duration_ms: 879.131631
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 988.689113

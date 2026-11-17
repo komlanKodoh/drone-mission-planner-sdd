@@ -1,0 +1,160 @@
+
+> test
+> node --experimental-strip-types tests/contracts.test.ts
+
+TAP version 13
+# Subtest: runnable HTTP skeleton
+    # Subtest: POST /api/recommendations maps FR-001 and returns 501
+    ok 1 - POST /api/recommendations maps FR-001 and returns 501
+      ---
+      duration_ms: 8.765021
+      type: 'test'
+      ...
+    # Subtest: PUT /api/missions/M1/configuration maps FR-002 and returns 501
+    ok 2 - PUT /api/missions/M1/configuration maps FR-002 and returns 501
+      ---
+      duration_ms: 0.775751
+      type: 'test'
+      ...
+    # Subtest: PUT /api/missions/M1/revisions maps FR-003 and returns 501
+    ok 3 - PUT /api/missions/M1/revisions maps FR-003 and returns 501
+      ---
+      duration_ms: 0.672344
+      type: 'test'
+      ...
+    # Subtest: POST /api/missions/M1/validations maps FR-004 and returns 501
+    ok 4 - POST /api/missions/M1/validations maps FR-004 and returns 501
+      ---
+      duration_ms: 0.479469
+      type: 'test'
+      ...
+    # Subtest: POST /api/missions/M1/preflight maps FR-005 and returns 501
+    ok 5 - POST /api/missions/M1/preflight maps FR-005 and returns 501
+      ---
+      duration_ms: 0.846999
+      type: 'test'
+      ...
+    # Subtest: POST /api/missions/M1/start maps FR-006 and returns 501
+    ok 6 - POST /api/missions/M1/start maps FR-006 and returns 501
+      ---
+      duration_ms: 0.649397
+      type: 'test'
+      ...
+    # Subtest: GET /api/missions/M1/telemetry maps FR-007 and returns 501
+    ok 7 - GET /api/missions/M1/telemetry maps FR-007 and returns 501
+      ---
+      duration_ms: 0.428258
+      type: 'test'
+      ...
+    # Subtest: POST /api/missions/M1/manual-mode maps FR-008 and returns 501
+    ok 8 - POST /api/missions/M1/manual-mode maps FR-008 and returns 501
+      ---
+      duration_ms: 1.228196
+      type: 'test'
+      ...
+    # Subtest: POST /api/commands/K1/reconcile maps FR-009 and returns 501
+    ok 9 - POST /api/commands/K1/reconcile maps FR-009 and returns 501
+      ---
+      duration_ms: 1.534308
+      type: 'test'
+      ...
+    # Subtest: POST /api/missions/M1/safe-actions maps FR-010 and returns 501
+    ok 10 - POST /api/missions/M1/safe-actions maps FR-010 and returns 501
+      ---
+      duration_ms: 1.571713
+      type: 'test'
+      ...
+    # Subtest: GET /api/missions/M1/record maps FR-011 and returns 501
+    ok 11 - GET /api/missions/M1/record maps FR-011 and returns 501
+      ---
+      duration_ms: 0.529491
+      type: 'test'
+      ...
+    # Subtest: returns 404 for an unknown route
+    ok 12 - returns 404 for an unknown route
+      ---
+      duration_ms: 0.557702
+      type: 'test'
+      ...
+    1..12
+ok 1 - runnable HTTP skeleton
+  ---
+  duration_ms: 27.200426
+  type: 'suite'
+  ...
+# Subtest: acceptance behavior contracts
+    # Subtest: AT-01 selects a qualifying configuration and blocks unknown compatibility
+    ok 1 - AT-01 selects a qualifying configuration and blocks unknown compatibility
+      ---
+      duration_ms: 6.693176
+      type: 'test'
+      ...
+    # Subtest: AT-02 saves a valid ordered route revision
+    ok 2 - AT-02 saves a valid ordered route revision
+      ---
+      duration_ms: 2.930665
+      type: 'test'
+      ...
+    # Subtest: AT-03 validates the current route and records evidence references
+    ok 3 - AT-03 validates the current route and records evidence references
+      ---
+      duration_ms: 3.677462
+      type: 'test'
+      ...
+    # Subtest: AT-04 binds preflight confirmation to the current validation
+    ok 4 - AT-04 binds preflight confirmation to the current validation
+      ---
+      duration_ms: 3.390707
+      type: 'test'
+      ...
+    # Subtest: AT-05 reserves an aircraft once and waits for execution confirmation
+    ok 5 - AT-05 reserves an aircraft once and waits for execution confirmation
+      ---
+      duration_ms: 4.239389
+      type: 'test'
+      ...
+    # Subtest: AT-06 returns timestamped telemetry and stale-data alerts
+    ok 6 - AT-06 returns timestamped telemetry and stale-data alerts
+      ---
+      duration_ms: 3.622377
+      type: 'test'
+      ...
+    # Subtest: AT-07 gates direct control on fresh confirmed manual mode
+    ok 7 - AT-07 gates direct control on fresh confirmed manual mode
+      ---
+      duration_ms: 2.65776
+      type: 'test'
+      ...
+    # Subtest: AT-08 correlates command outcomes without retrying uncertain commands
+    ok 8 - AT-08 correlates command outcomes without retrying uncertain commands
+      ---
+      duration_ms: 4.416031
+      type: 'test'
+      ...
+    # Subtest: AT-09 records safe actions and completes only after confirmed landing
+    ok 9 - AT-09 records safe actions and completes only after confirmed landing
+      ---
+      duration_ms: 1.997202
+      type: 'test'
+      ...
+    # Subtest: AT-10 retrieves an append-only mission decision history
+    ok 10 - AT-10 retrieves an append-only mission decision history
+      ---
+      duration_ms: 1.321783
+      type: 'test'
+      ...
+    1..10
+ok 2 - acceptance behavior contracts
+  ---
+  duration_ms: 36.525694
+  type: 'suite'
+  ...
+1..2
+# tests 22
+# suites 2
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 151.341481
